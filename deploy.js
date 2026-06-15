@@ -1,6 +1,15 @@
+require("dotenv").config();
 const { REST, Routes } = require("discord.js");
+const fs = require("fs");
 
-const commands = []; // senin komutlar
+const commands = [];
+
+const files = fs.readdirSync("./commands").filter(f => f.endsWith(".js"));
+
+for (const file of files) {
+  const cmd = require(`./commands/${file}`);
+  commands.push(cmd.data.toJSON());
+}
 
 const rest = new REST({ version: "10" }).setToken(process.env.TOKEN);
 
@@ -16,7 +25,7 @@ const rest = new REST({ version: "10" }).setToken(process.env.TOKEN);
       { body: commands }
     );
 
-    console.log("Slash HAZIR (guild)");
+    console.log("Slash KOMUTLAR YÜKLENDİ");
   } catch (err) {
     console.log(err);
   }
