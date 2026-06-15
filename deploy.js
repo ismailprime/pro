@@ -1,28 +1,23 @@
 const { REST, Routes } = require("discord.js");
-const fs = require("fs");
 
-const commands = [];
+const commands = []; // senin komutlar
 
-const files = fs
-  .readdirSync("./commands")
-  .filter(f => f.endsWith(".js"));
-
-for (const file of files) {
-  const cmd = require(`./commands/${file}`);
-  commands.push(cmd.data.toJSON());
-}
-
-const rest = new REST({ version: "10" })
-  .setToken(process.env.TOKEN);
+const rest = new REST({ version: "10" }).setToken(process.env.TOKEN);
 
 (async () => {
+  try {
+    console.log("Slash yükleniyor...");
 
-  console.log("Slash yükleniyor...");
+    await rest.put(
+      Routes.applicationGuildCommands(
+        process.env.CLIENT_ID,
+        process.env.GUILD_ID
+      ),
+      { body: commands }
+    );
 
-  await rest.put(
-    Routes.applicationCommands(process.env.CLIENT_ID),
-    { body: commands }
-  );
-
-  console.log("Slash hazır!");
+    console.log("Slash HAZIR (guild)");
+  } catch (err) {
+    console.log(err);
+  }
 })();
