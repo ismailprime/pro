@@ -4,11 +4,9 @@ const {
   Client,
   GatewayIntentBits,
   Partials,
-  PermissionsBitField,
   ActionRowBuilder,
   ButtonBuilder,
-  ButtonStyle,
-  Collection
+  ButtonStyle
 } = require("discord.js");
 
 const fs = require("fs");
@@ -50,9 +48,9 @@ const ROLES = {
   special: "1515779632761143540"
 };
 
-const UYE_ROLE = "1515752720433152050"; // join rol
+const UYE_ROLE = "1515752720433152050";
 
-// ================= XP ROLE SYSTEM =================
+// ================= ROLE SYSTEM =================
 
 async function updateRoles(member, xpValue) {
 
@@ -80,7 +78,18 @@ async function updateRoles(member, xpValue) {
     return member.roles.add(ROLES.caylak).catch(()=>{});
 }
 
-// ================= HOŞGELDİN + OTOMATİK ROL =================
+// ================= MODERASYON =================
+
+// 🔥 Küfür listesi ARTIRILDI
+const badWords = [
+  "amk", "oç", "siktir", "fuck", "shit",
+  "piç", "orospu", "aq", "amq", "yarrak"
+];
+
+// 🔗 Link kontrol
+const linkRegex = /(https?:\/\/|www\.)/i;
+
+// ================= HOŞGELDİN =================
 
 client.on("guildMemberAdd", member => {
 
@@ -89,13 +98,11 @@ client.on("guildMemberAdd", member => {
 
   const channel = member.guild.systemChannel;
   if (channel) {
-    channel.send(`👋 Hoşgeldin <@${member.id}>!`);
+    channel.send(`👋 Hoşgeldin <@${member.id}>`);
   }
 });
 
-// ================= XP + PARA + KÜFÜR =================
-
-const badWords = ["amk", "oç", "siktir", "fuck", "shit"];
+// ================= MESSAGE SYSTEM =================
 
 client.on("messageCreate", async message => {
 
@@ -108,28 +115,36 @@ client.on("messageCreate", async message => {
   if (!money[id]) money[id] = 0;
   if (!cooldown[id]) cooldown[id] = 0;
 
-  // ================= KÜFÜR =================
   const content = message.content.toLowerCase();
 
+  // ================= LINK ENGEL =================
+  if (linkRegex.test(content)) {
+
+    await message.delete().catch(()=>{});
+
+    if (message.member?.moderatable)
+      message.member.timeout(60 * 60 * 1000); // 1 saat mute
+
+    return message.channel.send(`🔗 Link yasak → 1 saat mute`);
+  }
+
+  // ================= KÜFÜR =================
   if (badWords.some(w => content.includes(w))) {
 
     await message.delete().catch(()=>{});
 
-    const member = message.member;
-
-    if (member && member.moderatable) {
-      member.timeout(5 * 60 * 1000);
-    }
+    if (message.member?.moderatable)
+      message.member.timeout(5 * 60 * 1000);
 
     return message.channel.send(`⚠️ Küfür → 5 dk mute`);
   }
 
-  // ================= XP / PARA =================
+  // ================= XP + PARA =================
 
   if (now - cooldown[id] >= 120000) {
 
-    const xpGain = Math.floor(Math.random() * 21) + 10;
-    const moneyGain = Math.floor(Math.random() * 901) + 100;
+    const xpGain = Math.floor(Math.random() * 31) + 15; // ARTIRILDI
+    const moneyGain = Math.floor(Math.random() * 1201) + 200; // ARTIRILDI
 
     xp[id] += xpGain;
     money[id] += moneyGain;
@@ -148,9 +163,11 @@ client.on("messageCreate", async message => {
   if (message.content === "!param")
     return message.reply(`💰 Para: ${money[id] || 0}`);
 
+  // SHOP
   if (message.content === "!shop") {
 
     const row = new ActionRowBuilder().addComponents(
+
       new ButtonBuilder()
         .setCustomId("buy_xp")
         .setLabel("⭐ XP (50💰)")
@@ -162,7 +179,10 @@ client.on("messageCreate", async message => {
         .setStyle(ButtonStyle.Success)
     );
 
-    return message.channel.send({ content: "🛒 SHOP", components: [row] });
+    return message.channel.send({
+      content: "🛒 SHOP",
+      components: [row]
+    });
   }
 });
 
