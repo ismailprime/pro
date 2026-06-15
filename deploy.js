@@ -1,9 +1,10 @@
 const { REST, Routes } = require("discord.js");
 const fs = require("fs");
 
+// commands oku
 const commands = [];
 
-try {
+if (fs.existsSync("./commands")) {
   const files = fs.readdirSync("./commands");
 
   for (const file of files) {
@@ -11,23 +12,19 @@ try {
 
     const cmd = require(`./commands/${file}`);
 
-    if (!cmd.data) {
-      console.log(file + " data yok");
-      continue;
+    if (cmd?.data) {
+      commands.push(cmd.data.toJSON());
     }
-
-    commands.push(cmd.data.toJSON());
   }
-
-} catch (err) {
-  console.log("COMMANDS HATA:", err);
 }
+
+console.log("Komut sayısı:", commands.length);
 
 const rest = new REST({ version: "10" }).setToken(process.env.TOKEN);
 
 (async () => {
   try {
-    console.log("Slash yükleniyor...");
+    console.log("Slash komutlar yükleniyor...");
 
     await rest.put(
       Routes.applicationGuildCommands(
@@ -37,8 +34,9 @@ const rest = new REST({ version: "10" }).setToken(process.env.TOKEN);
       { body: commands }
     );
 
-    console.log("SLASH OK");
+    console.log("✅ Slash komutlar yüklendi!");
   } catch (err) {
-    console.log("DEPLOY ERROR:", err);
+    console.log("❌ HATA:");
+    console.log(err);
   }
 })();
